@@ -17,46 +17,74 @@ import { isTokenExpired, sanitizeEmail, validateEmail } from '../utils';
 
 export default function Login({ navigation }: StackScreenProps<any>) {
     const authenticationContext = useContext(AuthenticationContext);
+
+    // State to store email and password entered by the user
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    // State for validation errors
     const [emailIsInvalid, setEmailIsInvalid] = useState<boolean>();
     const [passwordIsInvalid, setPasswordIsInvalid] = useState<boolean>();
-    const [authError, setAuthError] = useState<string>();
 
+    // State for authentication errors and status
+    const [authError, setAuthError] = useState<string>();
     const [accessTokenIsValid, setAccessTokenIsValid] = useState<boolean>(false);
     const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
+
+    // Checks if the screen is currently focused
     const isFocused = useIsFocused();
 
+    /**
+     * Retrieves cached user and token data when the component mounts.
+     * If valid cached data exists, it updates the authentication context and navigates the user.
+     */
     useEffect(() => {
         getFromCache('userInfo').then(
             (cachedUserInfo) => authenticationContext?.setValue(cachedUserInfo as User),
             (error: any) => console.log(error)
         );
+
         getFromCache('accessToken').then(
             (accessToken) => accessToken && !isTokenExpired(accessToken as string) && setAccessTokenIsValid(true),
             (error: any) => console.log(error)
         );
-        if (authError)
+
+        if (authError) {
             Alert.alert('Authentication Error', authError, [{ text: 'Ok', onPress: () => setAuthError(undefined) }]);
+        }
     }, [authError]);
 
+    /**
+     * Navigates the user to the EventsMap screen if a valid token is detected.
+     */
     useEffect(() => {
-        if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
+        if (accessTokenIsValid && authenticationContext?.value) {
+            navigation.navigate('EventsMap');
+        }
     }, [accessTokenIsValid]);
 
+    /**
+     * Handles user authentication.
+     * Validates the form, sends an API request, and caches the user data upon success.
+     */
     const handleAuthentication = () => {
         if (formIsValid()) {
             setIsAuthenticating(true);
             api.authenticateUser(sanitizeEmail(email), password)
                 .then((response) => {
+                    // Cache the user information and token
                     setInCache('userInfo', response.data.user);
                     setInCache('accessToken', response.data.accessToken);
+
+                    // Update the authentication context
                     authenticationContext?.setValue(response.data.user);
+
+                    // Stop the spinner and navigate to the EventsMap screen
                     setIsAuthenticating(false);
-                    123;
                     navigation.navigate('EventsMap');
                 })
                 .catch((error) => {
+                    // Handle API errors
                     if (error.response) {
                         setAuthError(error.response.data);
                     } else {
@@ -67,22 +95,34 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         }
     };
 
+    /**
+     * Validates the form inputs.
+     * @returns {boolean} True if the form is valid, false otherwise.
+     */
     const formIsValid = () => {
         const emailIsValid = !isEmailInvalid();
         const passwordIsValid = !isPasswordInvalid();
         return emailIsValid && passwordIsValid;
     };
 
+    /**
+     * Checks if the password is invalid.
+     * @returns {boolean} True if the password is invalid, false otherwise.
+     */
     const isPasswordInvalid = (): boolean => {
         const invalidCheck = password.length < 6;
         setPasswordIsInvalid(invalidCheck);
-        return invalidCheck ? true : false;
+        return invalidCheck;
     };
 
+    /**
+     * Checks if the email is invalid.
+     * @returns {boolean} True if the email is invalid, false otherwise.
+     */
     const isEmailInvalid = (): boolean => {
         const invalidCheck = !validateEmail(email);
         setEmailIsInvalid(invalidCheck);
-        return invalidCheck ? true : false;
+        return invalidCheck;
     };
 
     return (
@@ -102,6 +142,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     alignItems: 'stretch',
                 }}
             >
+                {/* App Logo */}
                 <Image
                     resizeMode="contain"
                     style={{
@@ -112,6 +153,8 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     source={logoImg}
                 />
                 <Spacer size={80} />
+
+                {/* Email Input */}
                 <View style={styles.inputLabelRow}>
                     <Text style={styles.label}>Email</Text>
                     {emailIsInvalid && <Text style={styles.error}>invalid email</Text>}
@@ -122,6 +165,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     onEndEditing={isEmailInvalid}
                 />
 
+                {/* Password Input */}
                 <View style={styles.inputLabelRow}>
                     <Text style={styles.label}>Password</Text>
                     {passwordIsInvalid && <Text style={styles.error}>invalid password</Text>}
@@ -133,7 +177,11 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     onEndEditing={isPasswordInvalid}
                 />
                 <Spacer size={80} />
+
+                {/* Login Button */}
                 <BigButton style={{ marginBottom: 8 }} onPress={handleAuthentication} label="Log in" color="#FF8700" />
+
+                {/* Loading Spinner */}
                 <Spinner
                     visible={isAuthenticating}
                     textContent={'Authenticating...'}
@@ -145,6 +193,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
     );
 }
 
+// Styles for the component
 const styles = StyleSheet.create({
     gradientContainer: {
         flex: 1,

@@ -1,6 +1,14 @@
 # Volunteam App
 
+## Project Scope and Goal
+
+Volunteam is an application designed to help connect people with local volunteer events. The app displays a map of available volunteer opportunities and allows users to log in, view event details, and create new events. It also integrates with external APIs for managing user authentication, image uploads, and data storage.
+
+# Setting up the Development Environment
+
 ## Setting up the fake API (json-server)
+
+To simulate the backend and have a local mock API, you'll need to set up json-server on your machine. Follow these steps to configure it:
 
 Update the file `src/services/api.ts`.
 
@@ -8,6 +16,8 @@ Before running your 'json-server', get your computer's IP address and update you
 
 ```
 npx json-server --watch db.json --port 3333 --host your_ip_address_here -m ./node_modules/json-server-auth
+
+This command will start the server and watch for any changes to your db.json file. Make sure the db.json is located at the root of the repo.
 ```
 
 To access your server online without running json-server locally, you can set your baseURL to:
@@ -35,4 +45,6 @@ When creating your app build or publishing, import your secret values to EAS run
 
 ```
 eas secret:push
+
+This will securely store your API key for the build process when you're ready to create a production app.
 ```
