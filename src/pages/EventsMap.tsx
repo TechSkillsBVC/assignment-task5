@@ -10,15 +10,32 @@ import * as MapSettings from '../constants/MapSettings';
 import { AuthenticationContext } from '../context/AuthenticationContext';
 import mapMarkerImg from '../images/map-marker.png';
 
+/**
+ * EventsMap component displays a map with event markers, allowing users to
+ * interact with the map, navigate to event details, create events, and log out.
+ * 
+ * @param props React Navigation props for stack navigation.
+ */
 export default function EventsMap(props: StackScreenProps<any>) {
     const { navigation } = props;
+
+    // Access the authentication context
     const authenticationContext = useContext(AuthenticationContext);
+
+    // Reference to the MapView for dynamic updates
     const mapViewRef = useRef<MapView>(null);
 
-    const handleNavigateToCreateEvent = () => {};
+    // Navigate to the "Create Event" screen
+    const handleNavigateToCreateEvent = () => {
+        // TODO: Implement navigation logic
+    };
 
-    const handleNavigateToEventDetails = () => {};
+    // Navigate to the "Event Details" screen
+    const handleNavigateToEventDetails = () => {
+        // TODO: Implement navigation logic
+    };
 
+    // Handle user logout
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
             authenticationContext?.setValue(undefined);
@@ -28,18 +45,19 @@ export default function EventsMap(props: StackScreenProps<any>) {
 
     return (
         <View style={styles.container}>
+            {/* MapView component to display the map */}
             <MapView
                 ref={mapViewRef}
                 provider={PROVIDER_GOOGLE}
-                initialRegion={MapSettings.DEFAULT_REGION}
+                initialRegion={MapSettings.DEFAULT_REGION} // Default map region
                 style={styles.mapStyle}
-                customMapStyle={customMapStyle}
+                customMapStyle={customMapStyle} // Custom map styling
                 showsMyLocationButton={false}
                 showsUserLocation={true}
                 rotateEnabled={false}
                 toolbarEnabled={false}
                 moveOnMarkerPress={false}
-                mapPadding={MapSettings.EDGE_PADDING}
+                mapPadding={MapSettings.EDGE_PADDING} // Padding for marker fitting
                 onLayout={() =>
                     mapViewRef.current?.fitToCoordinates(
                         events.map(({ position }) => ({
@@ -50,6 +68,7 @@ export default function EventsMap(props: StackScreenProps<any>) {
                     )
                 }
             >
+                {/* Render event markers */}
                 {events.map((event) => {
                     return (
                         <Marker
@@ -66,6 +85,7 @@ export default function EventsMap(props: StackScreenProps<any>) {
                 })}
             </MapView>
 
+            {/* Footer displaying event count and "Create Event" button */}
             <View style={styles.footer}>
                 <Text style={styles.footerText}>X event(s) found</Text>
                 <RectButton
@@ -75,6 +95,8 @@ export default function EventsMap(props: StackScreenProps<any>) {
                     <Feather name="plus" size={20} color="#FFF" />
                 </RectButton>
             </View>
+
+            {/* Logout button */}
             <RectButton
                 style={[styles.logoutButton, styles.smallButton, { backgroundColor: '#4D6F80' }]}
                 onPress={handleLogout}
@@ -85,6 +107,9 @@ export default function EventsMap(props: StackScreenProps<any>) {
     );
 }
 
+/**
+ * Styles for the EventsMap component.
+ */
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
@@ -101,7 +126,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 70,
         right: 24,
-
         elevation: 3,
     },
 
@@ -110,16 +134,13 @@ const styles = StyleSheet.create({
         left: 24,
         right: 24,
         bottom: 40,
-
         backgroundColor: '#FFF',
         borderRadius: 16,
         height: 56,
         paddingLeft: 24,
-
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-
         elevation: 3,
     },
 
@@ -132,20 +153,25 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 16,
-
         justifyContent: 'center',
         alignItems: 'center',
     },
 });
 
+/**
+ * Event interface defining the structure of event data.
+ */
 interface event {
-    id: string;
+    id: string; // Unique identifier for the event
     position: {
-        latitude: number;
-        longitude: number;
+        latitude: number; // Latitude coordinate of the event
+        longitude: number; // Longitude coordinate of the event
     };
 }
 
+/**
+ * Mock data for the events displayed on the map.
+ */
 const events: event[] = [
     {
         id: 'e3c95682-870f-4080-a0d7-ae8e23e2534f',
