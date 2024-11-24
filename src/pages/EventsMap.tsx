@@ -1,26 +1,32 @@
-import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackScreenProps } from '@react-navigation/stack';
+import { Feather } from '@expo/vector-icons'; // Icon library for adding icons
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For storing and retrieving data from local storage
+import { StackScreenProps } from '@react-navigation/stack'; // For typing stack screen props
 import React, { useContext, useRef } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import customMapStyle from '../../map-style.json';
-import * as MapSettings from '../constants/MapSettings';
-import { AuthenticationContext } from '../context/AuthenticationContext';
-import mapMarkerImg from '../images/map-marker.png';
+import { Image, StyleSheet, Text, View } from 'react-native'; // Basic UI components
+import { RectButton } from 'react-native-gesture-handler'; // For custom styled buttons
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'; // For rendering the map and markers
+import customMapStyle from '../../map-style.json'; // Custom map style for the map view
+import * as MapSettings from '../constants/MapSettings'; // Constants for map settings like default region
+import { AuthenticationContext } from '../context/AuthenticationContext'; // Authentication context to manage logged-in user
+import mapMarkerImg from '../images/map-marker.png'; // Marker image for the map events
 
+// EventsMap component definition
 export default function EventsMap(props: StackScreenProps<any>) {
-    const { navigation } = props;
-    const authenticationContext = useContext(AuthenticationContext);
-    const mapViewRef = useRef<MapView>(null);
+    const { navigation } = props;  // Get navigation prop for navigating between screens
+    const authenticationContext = useContext(AuthenticationContext);  // Get authentication context to manage user state
+    const mapViewRef = useRef<MapView>(null);  // Ref to hold a reference to the MapView for operations
 
+    // Handle the event when the user navigates to create an event screen
     const handleNavigateToCreateEvent = () => {};
 
+    // Handle the event when the user navigates to an event details screen
     const handleNavigateToEventDetails = () => {};
 
+    // Handle user logout by removing the user info and access token from AsyncStorage
     const handleLogout = async () => {
+        // Remove user info and access token from AsyncStorage
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
+            // Reset authentication context and navigate back to the login screen
             authenticationContext?.setValue(undefined);
             navigation.navigate('Login');
         });
@@ -28,19 +34,21 @@ export default function EventsMap(props: StackScreenProps<any>) {
 
     return (
         <View style={styles.container}>
+            {/* MapView component that displays the map with event markers */}
             <MapView
-                ref={mapViewRef}
-                provider={PROVIDER_GOOGLE}
-                initialRegion={MapSettings.DEFAULT_REGION}
-                style={styles.mapStyle}
-                customMapStyle={customMapStyle}
-                showsMyLocationButton={false}
-                showsUserLocation={true}
-                rotateEnabled={false}
-                toolbarEnabled={false}
-                moveOnMarkerPress={false}
-                mapPadding={MapSettings.EDGE_PADDING}
+                ref={mapViewRef}  // Assign ref for the MapView instance
+                provider={PROVIDER_GOOGLE}  // Use Google Maps as the provider
+                initialRegion={MapSettings.DEFAULT_REGION}  // Set the initial region of the map
+                style={styles.mapStyle}  // Custom styles for the map
+                customMapStyle={customMapStyle}  // Apply the custom map style
+                showsMyLocationButton={false}  // Hide the 'My Location' button on the map
+                showsUserLocation={true}  // Show user's current location on the map
+                rotateEnabled={false}  // Disable map rotation
+                toolbarEnabled={false}  // Disable map toolbar
+                moveOnMarkerPress={false}  // Disable map movement when marker is pressed
+                mapPadding={MapSettings.EDGE_PADDING}  
                 onLayout={() =>
+                    // Fit the map to the coordinates of the events
                     mapViewRef.current?.fitToCoordinates(
                         events.map(({ position }) => ({
                             latitude: position.latitude,
@@ -50,40 +58,47 @@ export default function EventsMap(props: StackScreenProps<any>) {
                     )
                 }
             >
+                {/* Render event markers on the map */}
                 {events.map((event) => {
                     return (
                         <Marker
-                            key={event.id}
+                            key={event.id}  
                             coordinate={{
-                                latitude: event.position.latitude,
-                                longitude: event.position.longitude,
+                                latitude: event.position.latitude,  
+                                longitude: event.position.longitude,  
                             }}
-                            onPress={handleNavigateToEventDetails}
+                            onPress={handleNavigateToEventDetails}  // Navigate to event details when marker is pressed
                         >
+                            {/* Event marker image */}
                             <Image resizeMode="contain" style={{ width: 48, height: 54 }} source={mapMarkerImg} />
                         </Marker>
                     );
                 })}
             </MapView>
 
+            {/* Footer for displaying event count and 'Create Event' button */}
             <View style={styles.footer}>
-                <Text style={styles.footerText}>X event(s) found</Text>
+                <Text style={styles.footerText}>X event(s) found</Text>  {/* Display the number of events */}
+                {/* Button to navigate to the create event screen */}
                 <RectButton
-                    style={[styles.smallButton, { backgroundColor: '#00A3FF' }]}
-                    onPress={handleNavigateToCreateEvent}
+                    style={[styles.smallButton, { backgroundColor: '#00A3FF' }]}  
+                    onPress={handleNavigateToCreateEvent}  
                 >
-                    <Feather name="plus" size={20} color="#FFF" />
+                    <Feather name="plus" size={20} color="#FFF" />  
                 </RectButton>
             </View>
+
+            {/* Logout button to log out the user */}
             <RectButton
-                style={[styles.logoutButton, styles.smallButton, { backgroundColor: '#4D6F80' }]}
-                onPress={handleLogout}
+                style={[styles.logoutButton, styles.smallButton, { backgroundColor: '#4D6F80' }]}  
+                onPress={handleLogout}  // Handle logout functionality
             >
-                <Feather name="log-out" size={20} color="#FFF" />
+                <Feather name="log-out" size={20} color="#FFF" />  
             </RectButton>
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {
