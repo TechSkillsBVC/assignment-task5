@@ -1,5 +1,19 @@
 # Volunteam App
 
+# Project Description
+Volunteam is an application designed to connect volunteers with events that need their help.
+The app allows users to log in, view events on a map, and participate in volunteering activities.
+The goal is to create a seamless and interactive platform for community engagement and support.
+
+# Scope and Goal
+
+The primary scope of the Volunteam app is to facilitate 
+the connection between volunteers and organizations in need of assistance. 
+By providing a platform to easily find and join volunteer events, 
+the app aims to enhance community involvement and make volunteering more accessible. 
+The goal is to encourage more people to participate in community service 
+by simplifying the process of finding and joining events.
+
 ## Setting up the fake API (json-server)
 
 Update the file `src/services/api.ts`.

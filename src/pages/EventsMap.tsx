@@ -1,90 +1,99 @@
-import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackScreenProps } from '@react-navigation/stack';
-import React, { useContext, useRef } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import customMapStyle from '../../map-style.json';
-import * as MapSettings from '../constants/MapSettings';
-import { AuthenticationContext } from '../context/AuthenticationContext';
-import mapMarkerImg from '../images/map-marker.png';
+import { Feather } from '@expo/vector-icons'; // Icon library for vector icons
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Library for asynchronous storage in React Native
+import { StackScreenProps } from '@react-navigation/stack'; // Type for stack navigation props
+import React, { useContext, useRef } from 'react'; // React and hooks
+import { Image, StyleSheet, Text, View } from 'react-native'; // Core react-native components
+import { RectButton } from 'react-native-gesture-handler'; // Button component for touch handling
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'; // Map component and marker for Google Maps
+import customMapStyle from '../../map-style.json'; // Custom map style JSON
+import * as MapSettings from '../constants/MapSettings'; // Map settings constants
+import { AuthenticationContext } from '../context/AuthenticationContext'; // Context for managing authentication state
+import mapMarkerImg from '../images/map-marker.png'; // Marker image import
 
+// Main EventsMap component
 export default function EventsMap(props: StackScreenProps<any>) {
-    const { navigation } = props;
-    const authenticationContext = useContext(AuthenticationContext);
-    const mapViewRef = useRef<MapView>(null);
+    const { navigation } = props; // Destructure navigation prop from props
+    const authenticationContext = useContext(AuthenticationContext); // Access authentication context
+    const mapViewRef = useRef<MapView>(null); // Reference for the MapView component
 
+    // Function to handle navigation to the Create Event screen (currently empty)
     const handleNavigateToCreateEvent = () => {};
 
+    // Function to handle navigation to the Event Details screen (currently empty)
     const handleNavigateToEventDetails = () => {};
 
+    // Function to handle user logout
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
-            authenticationContext?.setValue(undefined);
-            navigation.navigate('Login');
+            authenticationContext?.setValue(undefined); // Clear authentication context
+            navigation.navigate('Login'); // Navigate to Login screen
         });
     };
 
     return (
         <View style={styles.container}>
+            {/* MapView component to display events on the map */}
             <MapView
-                ref={mapViewRef}
-                provider={PROVIDER_GOOGLE}
-                initialRegion={MapSettings.DEFAULT_REGION}
-                style={styles.mapStyle}
-                customMapStyle={customMapStyle}
-                showsMyLocationButton={false}
-                showsUserLocation={true}
-                rotateEnabled={false}
-                toolbarEnabled={false}
-                moveOnMarkerPress={false}
-                mapPadding={MapSettings.EDGE_PADDING}
+                ref={mapViewRef} // Reference to the MapView for programmatic control
+                provider={PROVIDER_GOOGLE} // Use Google Maps as the provider
+                initialRegion={MapSettings.DEFAULT_REGION} // Set initial region for the map
+                style={styles.mapStyle} // Apply styles to the map
+                customMapStyle={customMapStyle} // Apply custom map style
+                showsMyLocationButton={false} // Hide My Location button
+                showsUserLocation={true} // Show user location on the map
+                rotateEnabled={false} // Disable map rotation by user
+                toolbarEnabled={false} // Disable toolbar
+                moveOnMarkerPress={false} // Prevent map moving when markers are pressed
+                mapPadding={MapSettings.EDGE_PADDING} // Set padding around the map edges
                 onLayout={() =>
                     mapViewRef.current?.fitToCoordinates(
                         events.map(({ position }) => ({
                             latitude: position.latitude,
                             longitude: position.longitude,
                         })),
-                        { edgePadding: MapSettings.EDGE_PADDING }
+                        { edgePadding: MapSettings.EDGE_PADDING } // Fit map to show all event markers
                     )
                 }
             >
+                {/* Render markers for each event on the map */}
                 {events.map((event) => {
                     return (
                         <Marker
-                            key={event.id}
+                            key={event.id} // Unique key for each marker
                             coordinate={{
                                 latitude: event.position.latitude,
                                 longitude: event.position.longitude,
                             }}
-                            onPress={handleNavigateToEventDetails}
+                            onPress={handleNavigateToEventDetails} // Navigate to event details on marker press
                         >
-                            <Image resizeMode="contain" style={{ width: 48, height: 54 }} source={mapMarkerImg} />
+                            <Image resizeMode="contain" style={{ width: 48, height: 54 }} source={mapMarkerImg} /> {/* Marker image */}
                         </Marker>
                     );
                 })}
             </MapView>
 
+            {/* Footer component displaying the number of events found */}
             <View style={styles.footer}>
-                <Text style={styles.footerText}>X event(s) found</Text>
+                <Text style={styles.footerText}>X event(s) found</Text> {/* Placeholder text for event count */}
                 <RectButton
                     style={[styles.smallButton, { backgroundColor: '#00A3FF' }]}
-                    onPress={handleNavigateToCreateEvent}
+                    onPress={handleNavigateToCreateEvent} // Navigate to create event screen on button press
                 >
-                    <Feather name="plus" size={20} color="#FFF" />
+                    <Feather name="plus" size={20} color="#FFF" /> {/* Plus icon for creating new events */}
                 </RectButton>
             </View>
+            {/* Logout button */}
             <RectButton
                 style={[styles.logoutButton, styles.smallButton, { backgroundColor: '#4D6F80' }]}
-                onPress={handleLogout}
+                onPress={handleLogout} // Handle logout on button press
             >
-                <Feather name="log-out" size={20} color="#FFF" />
+                <Feather name="log-out" size={20} color="#FFF" /> {/* Logout icon */}
             </RectButton>
         </View>
     );
 }
 
+// Styles for the component using StyleSheet.create for better performance and organization
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
@@ -138,6 +147,7 @@ const styles = StyleSheet.create({
     },
 });
 
+// Event interface definition for type checking
 interface event {
     id: string;
     position: {
@@ -146,6 +156,7 @@ interface event {
     };
 }
 
+// Sample events data with their positions on the map
 const events: event[] = [
     {
         id: 'e3c95682-870f-4080-a0d7-ae8e23e2534f',
