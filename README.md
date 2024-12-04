@@ -1,5 +1,10 @@
 # Volunteam App
 
+
+#Scope Of Priject
+
+This Volunteam application about to visit volunteer project places, what is the opportunity as a volunteer, people can enter their credentials when they wants to enter to this application.
+
 ## Setting up the fake API (json-server)
 
 Update the file `src/services/api.ts`.
