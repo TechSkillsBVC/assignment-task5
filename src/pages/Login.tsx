@@ -1,200 +1,196 @@
-import { useIsFocused } from '@react-navigation/native';
-import { StackScreenProps } from '@react-navigation/stack';
-import { LinearGradient } from 'expo-linear-gradient';
-import { StatusBar } from 'expo-status-bar';
-import React, { useContext, useEffect, useState } from 'react';
-import { Alert, Image, StyleSheet, Text, TextInput, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import Spinner from 'react-native-loading-spinner-overlay';
-import BigButton from '../components/BigButton';
-import Spacer from '../components/Spacer';
-import { AuthenticationContext } from '../context/AuthenticationContext';
-import logoImg from '../images/logo.png';
-import * as api from '../services/api';
-import { getFromCache, setInCache } from '../services/caching';
-import { User } from '../types/User';
-import { isTokenExpired, sanitizeEmail, validateEmail } from '../utils';
+import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StackScreenProps } from "@react-navigation/stack";
+import React, { useContext, useRef } from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { RectButton } from "react-native-gesture-handler";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import customMapStyle from "../../map-style.json";
+import * as MapSettings from "../constants/MapSettings";
+import { AuthenticationContext } from "../context/AuthenticationContext";
+import mapMarkerImg from "../images/map-marker.png";
 
-export default function Login({ navigation }: StackScreenProps<any>) {
-    const authenticationContext = useContext(AuthenticationContext);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [emailIsInvalid, setEmailIsInvalid] = useState<boolean>();
-    const [passwordIsInvalid, setPasswordIsInvalid] = useState<boolean>();
-    const [authError, setAuthError] = useState<string>();
+export default function EventsMap(props: StackScreenProps<any>) {
+  // Navigation object provided by React Navigation
+  const { navigation } = props;
 
-    const [accessTokenIsValid, setAccessTokenIsValid] = useState<boolean>(false);
-    const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
-    const isFocused = useIsFocused();
+  // Access user authentication data and logout handler
+  const authenticationContext = useContext(AuthenticationContext);
 
-    useEffect(() => {
-        getFromCache('userInfo').then(
-            (cachedUserInfo) => authenticationContext?.setValue(cachedUserInfo as User),
-            (error: any) => console.log(error)
-        );
-        getFromCache('accessToken').then(
-            (accessToken) => accessToken && !isTokenExpired(accessToken as string) && setAccessTokenIsValid(true),
-            (error: any) => console.log(error)
-        );
-        if (authError)
-            Alert.alert('Authentication Error', authError, [{ text: 'Ok', onPress: () => setAuthError(undefined) }]);
-    }, [authError]);
+  // Map reference for adjusting viewport programmatically
+  const mapViewRef = useRef<MapView>(null);
 
-    useEffect(() => {
-        if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
-    }, [accessTokenIsValid]);
+  // Navigate to Create Event screen (stub for now)
+  const handleNavigateToCreateEvent = () => {};
 
-    const handleAuthentication = () => {
-        if (formIsValid()) {
-            setIsAuthenticating(true);
-            api.authenticateUser(sanitizeEmail(email), password)
-                .then((response) => {
-                    setInCache('userInfo', response.data.user);
-                    setInCache('accessToken', response.data.accessToken);
-                    authenticationContext?.setValue(response.data.user);
-                    setIsAuthenticating(false);
-                    123;
-                    navigation.navigate('EventsMap');
-                })
-                .catch((error) => {
-                    if (error.response) {
-                        setAuthError(error.response.data);
-                    } else {
-                        setAuthError('Something went wrong.');
-                    }
-                    setIsAuthenticating(false);
-                });
+  // Navigate to Event Details screen (stub for now)
+  const handleNavigateToEventDetails = () => {};
+
+  // Log out user, clear session storage, and redirect to Login
+  const handleLogout = async () => {
+    AsyncStorage.multiRemove(["userInfo", "accessToken"]).then(() => {
+      authenticationContext?.setValue(undefined);
+      navigation.navigate("Login");
+    });
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Map showing event markers */}
+      <MapView
+        ref={mapViewRef}
+        provider={PROVIDER_GOOGLE}
+        initialRegion={MapSettings.DEFAULT_REGION}
+        style={styles.mapStyle}
+        customMapStyle={customMapStyle}
+        showsMyLocationButton={false}
+        showsUserLocation={true}
+        rotateEnabled={false}
+        toolbarEnabled={false}
+        moveOnMarkerPress={false}
+        mapPadding={MapSettings.EDGE_PADDING}
+        // Adjust map to include all event markers
+        onLayout={() =>
+          mapViewRef.current?.fitToCoordinates(
+            events.map(({ position }) => ({
+              latitude: position.latitude,
+              longitude: position.longitude,
+            })),
+            { edgePadding: MapSettings.EDGE_PADDING }
+          )
         }
-    };
+      >
+        {/* Create one marker per event */}
+        {events.map((event) => (
+          <Marker
+            key={event.id}
+            coordinate={{
+              latitude: event.position.latitude,
+              longitude: event.position.longitude,
+            }}
+            onPress={handleNavigateToEventDetails}
+          >
+            <Image
+              resizeMode="contain"
+              style={{ width: 48, height: 54 }}
+              source={mapMarkerImg}
+            />
+          </Marker>
+        ))}
+      </MapView>
 
-    const formIsValid = () => {
-        const emailIsValid = !isEmailInvalid();
-        const passwordIsValid = !isPasswordInvalid();
-        return emailIsValid && passwordIsValid;
-    };
-
-    const isPasswordInvalid = (): boolean => {
-        const invalidCheck = password.length < 6;
-        setPasswordIsInvalid(invalidCheck);
-        return invalidCheck ? true : false;
-    };
-
-    const isEmailInvalid = (): boolean => {
-        const invalidCheck = !validateEmail(email);
-        setEmailIsInvalid(invalidCheck);
-        return invalidCheck ? true : false;
-    };
-
-    return (
-        <LinearGradient
-            start={{ x: 0.0, y: 0.0 }}
-            end={{ x: 1.0, y: 1.0 }}
-            colors={['#031A62', '#00A3FF']}
-            style={styles.gradientContainer}
+      {/* Footer showing number of events and add button */}
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>X event(s) found</Text>
+        <RectButton
+          style={[styles.smallButton, { backgroundColor: "#00A3FF" }]}
+          onPress={handleNavigateToCreateEvent}
         >
-            {isFocused && <StatusBar animated translucent style="light" />}
-            <KeyboardAwareScrollView
-                style={styles.container}
-                contentContainerStyle={{
-                    padding: 24,
-                    flexGrow: 1,
-                    justifyContent: 'center',
-                    alignItems: 'stretch',
-                }}
-            >
-                <Image
-                    resizeMode="contain"
-                    style={{
-                        width: 240,
-                        height: 142,
-                        alignSelf: 'center',
-                    }}
-                    source={logoImg}
-                />
-                <Spacer size={80} />
-                <View style={styles.inputLabelRow}>
-                    <Text style={styles.label}>Email</Text>
-                    {emailIsInvalid && <Text style={styles.error}>invalid email</Text>}
-                </View>
-                <TextInput
-                    style={[styles.input, emailIsInvalid && styles.invalid]}
-                    onChangeText={(value) => setEmail(value)}
-                    onEndEditing={isEmailInvalid}
-                />
+          <Feather name="plus" size={20} color="#FFF" />
+        </RectButton>
+      </View>
 
-                <View style={styles.inputLabelRow}>
-                    <Text style={styles.label}>Password</Text>
-                    {passwordIsInvalid && <Text style={styles.error}>invalid password</Text>}
-                </View>
-                <TextInput
-                    style={[styles.input, passwordIsInvalid && styles.invalid]}
-                    secureTextEntry={true}
-                    onChangeText={(value) => setPassword(value)}
-                    onEndEditing={isPasswordInvalid}
-                />
-                <Spacer size={80} />
-                <BigButton style={{ marginBottom: 8 }} onPress={handleAuthentication} label="Log in" color="#FF8700" />
-                <Spinner
-                    visible={isAuthenticating}
-                    textContent={'Authenticating...'}
-                    overlayColor="#031A62BF"
-                    textStyle={styles.spinnerText}
-                />
-            </KeyboardAwareScrollView>
-        </LinearGradient>
-    );
+      {/* Logout button fixed at top-right */}
+      <RectButton
+        style={[
+          styles.logoutButton,
+          styles.smallButton,
+          { backgroundColor: "#4D6F80" },
+        ]}
+        onPress={handleLogout}
+      >
+        <Feather name="log-out" size={20} color="#FFF" />
+      </RectButton>
+    </View>
+  );
 }
 
+// Screen styles
 const styles = StyleSheet.create({
-    gradientContainer: {
-        flex: 1,
-    },
+  container: {
+    ...StyleSheet.absoluteFillObject,
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
 
-    container: {
-        flex: 1,
-    },
+  mapStyle: {
+    ...StyleSheet.absoluteFillObject,
+  },
 
-    spinnerText: {
-        fontSize: 16,
-        fontFamily: 'Nunito_700Bold',
-        color: '#fff',
-    },
+  logoutButton: {
+    position: "absolute",
+    top: 70,
+    right: 24,
+    elevation: 3,
+  },
 
-    label: {
-        color: '#fff',
-        fontFamily: 'Nunito_600SemiBold',
-        fontSize: 15,
-    },
+  footer: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    bottom: 40,
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    height: 56,
+    paddingLeft: 24,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    elevation: 3,
+  },
 
-    inputLabelRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-        marginBottom: 4,
-    },
+  footerText: {
+    fontFamily: "Nunito_700Bold",
+    color: "#8fa7b3",
+  },
 
-    input: {
-        backgroundColor: '#fff',
-        borderWidth: 1.4,
-        borderColor: '#D3E2E5',
-        borderRadius: 8,
-        height: 56,
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 24,
-        marginBottom: 16,
-        color: '#5C8599',
-        fontFamily: 'Nunito_600SemiBold',
-        fontSize: 15,
-    },
-
-    invalid: {
-        borderColor: 'red',
-    },
-
-    error: {
-        color: 'white',
-        fontFamily: 'Nunito_600SemiBold',
-        fontSize: 12,
-    },
+  smallButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
+
+// Event type definition
+interface event {
+  id: string;
+  position: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+// Sample event data displayed on the map
+const events: event[] = [
+  {
+    id: "e3c95682-870f-4080-a0d7-ae8e23e2534f",
+    position: {
+      latitude: 51.105761,
+      longitude: -114.106943,
+    },
+  },
+  {
+    id: "98301b22-2b76-44f1-a8da-8c86c56b0367",
+    position: {
+      latitude: 51.04112,
+      longitude: -114.069325,
+    },
+  },
+  {
+    id: "d7b8ea73-ba2c-4fc3-9348-9814076124bd",
+    position: {
+      latitude: 51.01222958257112,
+      longitude: -114.11677222698927,
+    },
+  },
+  {
+    id: "d1a6b9ea-877d-4711-b8d7-af8f1bce4d29",
+    position: {
+      latitude: 51.010801915407036,
+      longitude: -114.07823592424393,
+    },
+  },
+];
