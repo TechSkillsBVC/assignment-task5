@@ -1,28 +1,24 @@
 import axios, { AxiosResponse } from 'axios';
-import { getEnvironentVariable } from '../utils';
+import { getEnvironentVariable } from '../utils'; // TODO: check spelling in utils (Environment vs Environent)
 
-// You can use any hosting service of your preference.
-// In this case, we will use ImgBB API: https://api.imgbb.com/.
-//
-// Sign up for free at https://imgbb.com/signup
-// Get your API key and add it to the .env file in your root folder.
-//
-// To run the app in your local environment, you will need to set the IMGBB_API_KEY
-// when starting the app using:
-// 'IMGBB_API_KEY="insert_your_api_key_here" npx expo start'
-//
-// When creating your app build or publishing, do not forget to run 'eas secret:push' command
-// to import your secret values to EAS.
-
+/**
+ * ImgBB API client.
+ * Requires IMGBB_API_KEY to be set in environment/.env (see README).
+ */
 const imageApi = axios.create({
-    baseURL: 'https://api.imgbb.com/1',
-    headers: { 'Content-Type': 'multipart/form-data' },
-    params: { key: getEnvironentVariable('IMGBB_API_KEY') },
+  baseURL: 'https://api.imgbb.com/1',
+  headers: { 'Content-Type': 'multipart/form-data' },
+  params: { key: getEnvironentVariable('IMGBB_API_KEY') },
 });
 
+/**
+ * Uploads a base64 image string to ImgBB.
+ * @param imageBase64 - image content as base64 (no data URI prefix)
+ * @returns AxiosResponse with upload result (status, image URL, etc.)
+ */
 export const uploadImage = (imageBase64: string): Promise<AxiosResponse> => {
-    const data = new FormData();
-    data.append('image', imageBase64);
+  const data = new FormData();
+  data.append('image', imageBase64);
 
-    return imageApi.post('/upload', data);
+  return imageApi.post('/upload', data);
 };

@@ -15,186 +15,222 @@ import { getFromCache, setInCache } from '../services/caching';
 import { User } from '../types/User';
 import { isTokenExpired, sanitizeEmail, validateEmail } from '../utils';
 
+/**
+ * Login screen
+ * - Validates email/password.
+ * - Calls API to authenticate.
+ * - Stores user and token in cache.
+ * - Navigates to EventsMap on success.
+ */
 export default function Login({ navigation }: StackScreenProps<any>) {
-    const authenticationContext = useContext(AuthenticationContext);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [emailIsInvalid, setEmailIsInvalid] = useState<boolean>();
-    const [passwordIsInvalid, setPasswordIsInvalid] = useState<boolean>();
-    const [authError, setAuthError] = useState<string>();
+  const authenticationContext = useContext(AuthenticationContext);
 
-    const [accessTokenIsValid, setAccessTokenIsValid] = useState<boolean>(false);
-    const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
-    const isFocused = useIsFocused();
+  // Form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-    useEffect(() => {
-        getFromCache('userInfo').then(
-            (cachedUserInfo) => authenticationContext?.setValue(cachedUserInfo as User),
-            (error: any) => console.log(error)
-        );
-        getFromCache('accessToken').then(
-            (accessToken) => accessToken && !isTokenExpired(accessToken as string) && setAccessTokenIsValid(true),
-            (error: any) => console.log(error)
-        );
-        if (authError)
-            Alert.alert('Authentication Error', authError, [{ text: 'Ok', onPress: () => setAuthError(undefined) }]);
-    }, [authError]);
+  // Validation flags
+  const [emailIsInvalid, setEmailIsInvalid] = useState<boolean>();
+  const [passwordIsInvalid, setPasswordIsInvalid] = useState<boolean>();
 
-    useEffect(() => {
-        if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
-    }, [accessTokenIsValid]);
+  // Error and loading states
+  const [authError, setAuthError] = useState<string>();
+  const [accessTokenIsValid, setAccessTokenIsValid] = useState<boolean>(false);
+  const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
 
-    const handleAuthentication = () => {
-        if (formIsValid()) {
-            setIsAuthenticating(true);
-            api.authenticateUser(sanitizeEmail(email), password)
-                .then((response) => {
-                    setInCache('userInfo', response.data.user);
-                    setInCache('accessToken', response.data.accessToken);
-                    authenticationContext?.setValue(response.data.user);
-                    setIsAuthenticating(false);
-                    123;
-                    navigation.navigate('EventsMap');
-                })
-                .catch((error) => {
-                    if (error.response) {
-                        setAuthError(error.response.data);
-                    } else {
-                        setAuthError('Something went wrong.');
-                    }
-                    setIsAuthenticating(false);
-                });
-        }
-    };
+  const isFocused = useIsFocused();
 
-    const formIsValid = () => {
-        const emailIsValid = !isEmailInvalid();
-        const passwordIsValid = !isPasswordInvalid();
-        return emailIsValid && passwordIsValid;
-    };
-
-    const isPasswordInvalid = (): boolean => {
-        const invalidCheck = password.length < 6;
-        setPasswordIsInvalid(invalidCheck);
-        return invalidCheck ? true : false;
-    };
-
-    const isEmailInvalid = (): boolean => {
-        const invalidCheck = !validateEmail(email);
-        setEmailIsInvalid(invalidCheck);
-        return invalidCheck ? true : false;
-    };
-
-    return (
-        <LinearGradient
-            start={{ x: 0.0, y: 0.0 }}
-            end={{ x: 1.0, y: 1.0 }}
-            colors={['#031A62', '#00A3FF']}
-            style={styles.gradientContainer}
-        >
-            {isFocused && <StatusBar animated translucent style="light" />}
-            <KeyboardAwareScrollView
-                style={styles.container}
-                contentContainerStyle={{
-                    padding: 24,
-                    flexGrow: 1,
-                    justifyContent: 'center',
-                    alignItems: 'stretch',
-                }}
-            >
-                <Image
-                    resizeMode="contain"
-                    style={{
-                        width: 240,
-                        height: 142,
-                        alignSelf: 'center',
-                    }}
-                    source={logoImg}
-                />
-                <Spacer size={80} />
-                <View style={styles.inputLabelRow}>
-                    <Text style={styles.label}>Email</Text>
-                    {emailIsInvalid && <Text style={styles.error}>invalid email</Text>}
-                </View>
-                <TextInput
-                    style={[styles.input, emailIsInvalid && styles.invalid]}
-                    onChangeText={(value) => setEmail(value)}
-                    onEndEditing={isEmailInvalid}
-                />
-
-                <View style={styles.inputLabelRow}>
-                    <Text style={styles.label}>Password</Text>
-                    {passwordIsInvalid && <Text style={styles.error}>invalid password</Text>}
-                </View>
-                <TextInput
-                    style={[styles.input, passwordIsInvalid && styles.invalid]}
-                    secureTextEntry={true}
-                    onChangeText={(value) => setPassword(value)}
-                    onEndEditing={isPasswordInvalid}
-                />
-                <Spacer size={80} />
-                <BigButton style={{ marginBottom: 8 }} onPress={handleAuthentication} label="Log in" color="#FF8700" />
-                <Spinner
-                    visible={isAuthenticating}
-                    textContent={'Authenticating...'}
-                    overlayColor="#031A62BF"
-                    textStyle={styles.spinnerText}
-                />
-            </KeyboardAwareScrollView>
-        </LinearGradient>
+  // On mount: try to restore user + token from cache.
+  useEffect(() => {
+    getFromCache('userInfo').then(
+      (cachedUserInfo) => authenticationContext?.setValue(cachedUserInfo as User),
+      (error: any) => console.log(error)
     );
+    getFromCache('accessToken').then(
+      (accessToken) => accessToken && !isTokenExpired(accessToken as string) && setAccessTokenIsValid(true),
+      (error: any) => console.log(error)
+    );
+
+    // Show any auth error as an alert and then clear it.
+    if (authError)
+      Alert.alert('Authentication Error', authError, [{ text: 'Ok', onPress: () => setAuthError(undefined) }]);
+  }, [authError]);
+
+  // If we have a valid token and a user, go straight to the map.
+  useEffect(() => {
+    if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
+  }, [accessTokenIsValid]);
+
+  /** Submit the form: validate -> call API -> store -> navigate. */
+  const handleAuthentication = () => {
+    if (formIsValid()) {
+      setIsAuthenticating(true);
+      api
+        .authenticateUser(sanitizeEmail(email), password)
+        .then((response) => {
+          setInCache('userInfo', response.data.user);
+          setInCache('accessToken', response.data.accessToken);
+          authenticationContext?.setValue(response.data.user);
+          setIsAuthenticating(false);
+
+          // TODO: remove stray "123;" line below (looks like a debug artifact)
+          123;
+
+          navigation.navigate('EventsMap');
+        })
+        .catch((error) => {
+          if (error.response) {
+            setAuthError(error.response.data);
+          } else {
+            setAuthError('Something went wrong.');
+          }
+          setIsAuthenticating(false);
+        });
+    }
+  };
+
+  /** Returns true if both email and password pass validation. */
+  const formIsValid = () => {
+    const emailIsValid = !isEmailInvalid();
+    const passwordIsValid = !isPasswordInvalid();
+    return emailIsValid && passwordIsValid;
+  };
+
+  /** Password must be at least 6 chars. */
+  const isPasswordInvalid = (): boolean => {
+    const invalidCheck = password.length < 6;
+    setPasswordIsInvalid(invalidCheck);
+    return invalidCheck ? true : false;
+  };
+
+  /** Email must be a valid format. */
+  const isEmailInvalid = (): boolean => {
+    const invalidCheck = !validateEmail(email);
+    setEmailIsInvalid(invalidCheck);
+    return invalidCheck ? true : false;
+  };
+
+  return (
+    <LinearGradient
+      start={{ x: 0.0, y: 0.0 }}
+      end={{ x: 1.0, y: 1.0 }}
+      colors={['#031A62', '#00A3FF']}
+      style={styles.gradientContainer}
+    >
+      {/* Only show a light status bar when this screen is focused. */}
+      {isFocused && <StatusBar animated translucent style="light" />}
+
+      {/* Scrolls when keyboard is open (better UX on mobile). */}
+      <KeyboardAwareScrollView
+        style={styles.container}
+        contentContainerStyle={{
+          padding: 24,
+          flexGrow: 1,
+          justifyContent: 'center',
+          alignItems: 'stretch',
+        }}
+      >
+        {/* Logo */}
+        <Image
+          resizeMode="contain"
+          style={{ width: 240, height: 142, alignSelf: 'center' }}
+          source={logoImg}
+        />
+
+        <Spacer size={80} />
+
+        {/* Email label + inline error */}
+        <View style={styles.inputLabelRow}>
+          <Text style={styles.label}>Email</Text>
+          {emailIsInvalid && <Text style={styles.error}>invalid email</Text>}
+        </View>
+
+        {/* Email input */}
+        <TextInput
+          style={[styles.input, emailIsInvalid && styles.invalid]}
+          onChangeText={(value) => setEmail(value)}
+          onEndEditing={isEmailInvalid}
+        />
+
+        {/* Password label + inline error */}
+        <View style={styles.inputLabelRow}>
+          <Text style={styles.label}>Password</Text>
+          {passwordIsInvalid && <Text style={styles.error}>invalid password</Text>}
+        </View>
+
+        {/* Password input */}
+        <TextInput
+          style={[styles.input, passwordIsInvalid && styles.invalid]}
+          secureTextEntry={true}
+          onChangeText={(value) => setPassword(value)}
+          onEndEditing={isPasswordInvalid}
+        />
+
+        <Spacer size={80} />
+
+        {/* Primary action button */}
+        <BigButton
+          style={{ marginBottom: 8 }}
+          onPress={handleAuthentication}
+          label="Log in"
+          color="#FF8700"
+        />
+
+        {/* Loading overlay while authenticating */}
+        <Spinner
+          visible={isAuthenticating}
+          textContent={'Authenticating...'}
+          overlayColor="#031A62BF"
+          textStyle={styles.spinnerText}
+        />
+      </KeyboardAwareScrollView>
+    </LinearGradient>
+  );
 }
 
 const styles = StyleSheet.create({
-    gradientContainer: {
-        flex: 1,
-    },
-
-    container: {
-        flex: 1,
-    },
-
-    spinnerText: {
-        fontSize: 16,
-        fontFamily: 'Nunito_700Bold',
-        color: '#fff',
-    },
-
-    label: {
-        color: '#fff',
-        fontFamily: 'Nunito_600SemiBold',
-        fontSize: 15,
-    },
-
-    inputLabelRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'baseline',
-        marginBottom: 4,
-    },
-
-    input: {
-        backgroundColor: '#fff',
-        borderWidth: 1.4,
-        borderColor: '#D3E2E5',
-        borderRadius: 8,
-        height: 56,
-        paddingTop: 16,
-        paddingBottom: 16,
-        paddingHorizontal: 24,
-        marginBottom: 16,
-        color: '#5C8599',
-        fontFamily: 'Nunito_600SemiBold',
-        fontSize: 15,
-    },
-
-    invalid: {
-        borderColor: 'red',
-    },
-
-    error: {
-        color: 'white',
-        fontFamily: 'Nunito_600SemiBold',
-        fontSize: 12,
-    },
+  gradientContainer: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+  spinnerText: {
+    fontSize: 16,
+    fontFamily: 'Nunito_700Bold',
+    color: '#fff',
+  },
+  label: {
+    color: '#fff',
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+  },
+  inputLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 4,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderWidth: 1.4,
+    borderColor: '#D3E2E5',
+    borderRadius: 8,
+    height: 56,
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingHorizontal: 24,
+    marginBottom: 16,
+    color: '#5C8599',
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 15,
+  },
+  invalid: {
+    borderColor: 'red',
+  },
+  error: {
+    color: 'white',
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 12,
+  },
 });
