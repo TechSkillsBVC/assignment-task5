@@ -1,38 +1,35 @@
-# Volunteam App
+# VoluTeam
 
-## Setting up the fake API (json-server)
+VoluTeam is a mobile app designed to help users discover, create, and engage with volunteer opportunities in their community!  
+The app allows users to browse events, view details, choose a preferred location, and even add their own volunteer events for others to join
 
-Update the file `src/services/api.ts`.
 
-Before running your 'json-server', get your computer's IP address and update your baseURL to `http://your_ip_address_here:3333` and then run:
+## Scope / Goal
 
-```
-npx json-server --watch db.json --port 3333 --host your_ip_address_here -m ./node_modules/json-server-auth
-```
+VoluTeam is meant to provide a simple, user-friendly platform that connects volunteers with volenteering events 
 
-To access your server online without running json-server locally, you can set your baseURL to:
+The objectives include:
+- Implementing navigation between multiple screens
+- Displaying a list / map of upcoming volunteer events
+- Allowing users to:
+  - View event details  
+  - Select a desired location  
+  - Add new volunteer opportunities through a form  
+- Managing state and mock data to represent event creation and retrieval
 
-```
-https://my-json-server.typicode.com/<your-github-username>/<your-github-repo>
-```
 
-To use `my-json-server`, make sure your `db.json` is located at the repo root.
+## Dev Environment Setup
 
-## Setting up the image upload API
+Install or ensure access to:
 
-Update the file `src/services/imageApi.ts`.
+- Node.js (v18+ recommended)  
+-  npm or yarn
+- Expo CLI
+- Expo Go app on a mobile device  
+  - iOS  download from App Store  
+  - Android download from Google Play Store
 
-You can use any hosting service of your preference. In this case, we will use ImgBB API: https://api.imgbb.com/.
-Sign up for free at https://imgbb.com/signup, get your API key and add it to the .env file in your root folder.
+### Expo Go install
 
-To run the app in your local environment, you will need to set the IMGBB_API_KEY when starting the app using:
-
-```
-IMGBB_API_KEY="insert_your_api_key_here" npx expo start
-```
-
-When creating your app build or publishing, import your secret values to EAS running:
-
-```
-eas secret:push
-```
+```bash
+npm install -g expo-cli

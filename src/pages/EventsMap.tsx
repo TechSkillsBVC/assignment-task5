@@ -1,3 +1,4 @@
+// IMPORTS
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -10,24 +11,31 @@ import * as MapSettings from '../constants/MapSettings';
 import { AuthenticationContext } from '../context/AuthenticationContext';
 import mapMarkerImg from '../images/map-marker.png';
 
+// event map screen component
 export default function EventsMap(props: StackScreenProps<any>) {
+    // grabbing nav from props
     const { navigation } = props;
+    // using the authentication context so we can log out
     const authenticationContext = useContext(AuthenticationContext);
+    // creating a ref so we can control the map
     const mapViewRef = useRef<MapView>(null);
-
+// placeholder function for navigating to create event screen
     const handleNavigateToCreateEvent = () => {};
-
+    // placeholder function for navigating to event details screen
     const handleNavigateToEventDetails = () => {};
 
+    // handling logout and clearing stored user data
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
             authenticationContext?.setValue(undefined);
             navigation.navigate('Login');
         });
     };
-
+    
+    // main container view
     return (
         <View style={styles.container}>
+            {/* map component showing all event markers */}
             <MapView
                 ref={mapViewRef}
                 provider={PROVIDER_GOOGLE}
@@ -50,6 +58,7 @@ export default function EventsMap(props: StackScreenProps<any>) {
                     )
                 }
             >
+                {/* looping through events array and rendering each marker */}
                 {events.map((event) => {
                     return (
                         <Marker
@@ -60,14 +69,18 @@ export default function EventsMap(props: StackScreenProps<any>) {
                             }}
                             onPress={handleNavigateToEventDetails}
                         >
+                            {/* pin img*/}
                             <Image resizeMode="contain" style={{ width: 48, height: 54 }} source={mapMarkerImg} />
                         </Marker>
                     );
                 })}
             </MapView>
 
+            {/* bottom container showing event count + create button */}
             <View style={styles.footer}>
                 <Text style={styles.footerText}>X event(s) found</Text>
+
+                  {/* button for creating a new event */}
                 <RectButton
                     style={[styles.smallButton, { backgroundColor: '#00A3FF' }]}
                     onPress={handleNavigateToCreateEvent}
@@ -75,16 +88,19 @@ export default function EventsMap(props: StackScreenProps<any>) {
                     <Feather name="plus" size={20} color="#FFF" />
                 </RectButton>
             </View>
+            {/* logout button on top right */}
             <RectButton
                 style={[styles.logoutButton, styles.smallButton, { backgroundColor: '#4D6F80' }]}
                 onPress={handleLogout}
             >
+                {/* logout icon */}
                 <Feather name="log-out" size={20} color="#FFF" />
             </RectButton>
         </View>
     );
 }
 
+// STYLES
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
@@ -146,6 +162,8 @@ interface event {
     };
 }
 
+
+// mock events array used to populate the map markers
 const events: event[] = [
     {
         id: 'e3c95682-870f-4080-a0d7-ae8e23e2534f',

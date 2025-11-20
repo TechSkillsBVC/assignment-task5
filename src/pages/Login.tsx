@@ -1,3 +1,4 @@
+//IMPORTS
 import { useIsFocused } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +16,7 @@ import { getFromCache, setInCache } from '../services/caching';
 import { User } from '../types/User';
 import { isTokenExpired, sanitizeEmail, validateEmail } from '../utils';
 
+// main login screen component 
 export default function Login({ navigation }: StackScreenProps<any>) {
     const authenticationContext = useContext(AuthenticationContext);
     const [email, setEmail] = useState('');
@@ -27,6 +29,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
     const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
     const isFocused = useIsFocused();
 
+    // effect to load cached user + token when the screen mounts or when authError changes
     useEffect(() => {
         getFromCache('userInfo').then(
             (cachedUserInfo) => authenticationContext?.setValue(cachedUserInfo as User),
@@ -40,13 +43,17 @@ export default function Login({ navigation }: StackScreenProps<any>) {
             Alert.alert('Authentication Error', authError, [{ text: 'Ok', onPress: () => setAuthError(undefined) }]);
     }, [authError]);
 
+        
+    // effect to automatically navigate to events map if token is valid and user is already authenticated
     useEffect(() => {
         if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
     }, [accessTokenIsValid]);
 
+    // function that handles the login flow when user taps the button
     const handleAuthentication = () => {
         if (formIsValid()) {
             setIsAuthenticating(true);
+            // calling api to authenticate user using sanitized email + password
             api.authenticateUser(sanitizeEmail(email), password)
                 .then((response) => {
                     setInCache('userInfo', response.data.user);
@@ -67,18 +74,19 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         }
     };
 
+    // helper function to check if both email and password are valid
     const formIsValid = () => {
         const emailIsValid = !isEmailInvalid();
         const passwordIsValid = !isPasswordInvalid();
         return emailIsValid && passwordIsValid;
     };
-
+    // helper that checks if password is too short and updates state
     const isPasswordInvalid = (): boolean => {
         const invalidCheck = password.length < 6;
         setPasswordIsInvalid(invalidCheck);
         return invalidCheck ? true : false;
     };
-
+    // helper that checks if email passes the validateEmail utility
     const isEmailInvalid = (): boolean => {
         const invalidCheck = !validateEmail(email);
         setEmailIsInvalid(invalidCheck);
@@ -86,12 +94,14 @@ export default function Login({ navigation }: StackScreenProps<any>) {
     };
 
     return (
+        // using a linear gradient as background for the login screen
         <LinearGradient
             start={{ x: 0.0, y: 0.0 }}
             end={{ x: 1.0, y: 1.0 }}
             colors={['#031A62', '#00A3FF']}
             style={styles.gradientContainer}
         >
+            {/* only show status bar styling when this screen is focused */}
             {isFocused && <StatusBar animated translucent style="light" />}
             <KeyboardAwareScrollView
                 style={styles.container}
@@ -102,6 +112,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     alignItems: 'stretch',
                 }}
             >
+                {/* app logo at the top of the login screen */}
                 <Image
                     resizeMode="contain"
                     style={{
@@ -116,6 +127,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     <Text style={styles.label}>Email</Text>
                     {emailIsInvalid && <Text style={styles.error}>invalid email</Text>}
                 </View>
+                {/* email input field */}
                 <TextInput
                     style={[styles.input, emailIsInvalid && styles.invalid]}
                     onChangeText={(value) => setEmail(value)}
@@ -126,6 +138,8 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     <Text style={styles.label}>Password</Text>
                     {passwordIsInvalid && <Text style={styles.error}>invalid password</Text>}
                 </View>
+
+                 {/* password input field */}
                 <TextInput
                     style={[styles.input, passwordIsInvalid && styles.invalid]}
                     secureTextEntry={true}
@@ -133,7 +147,9 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     onEndEditing={isPasswordInvalid}
                 />
                 <Spacer size={80} />
+                {/* main login button */}
                 <BigButton style={{ marginBottom: 8 }} onPress={handleAuthentication} label="Log in" color="#FF8700" />
+                 {/* loading overlay while authentication is in progress */}
                 <Spinner
                     visible={isAuthenticating}
                     textContent={'Authenticating...'}
@@ -145,6 +161,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
     );
 }
 
+//STYLES
 const styles = StyleSheet.create({
     gradientContainer: {
         flex: 1,
