@@ -1,5 +1,47 @@
 # Volunteam App
 
+Description
+Volunteam is an app that helps users discover and participate in local volunteering events. Users can view events on a map, see details of each event, and create new events if authenticated. The app provides real-time location tracking and a user-friendly interface for engaging with the local volunteering community.
+
+Goals
+Provide an intuitive map-based interface to explore local volunteering opportunities.
+Allow users to create and manage volunteering events.
+Securely authenticate users and store their information locally for seamless experience.
+Support image uploads for events using a reliable image hosting service.
+Ensure offline-friendly experience with caching of user and event data.
+
+## Initial Setup
+
+Clean Up Old Expo CLI : To avoid conflicts with the latest SDK:
+
+npm uninstall -g expo-cli
+npm cache clean --force
+
+Install Local Expo CLI
+
+npm install expo@^54.0.0 --save-dev
+npx expo --version
+
+Install Compatible React & React DOM
+For Expo SDK 54, use:
+
+npm install react@19.1.0 react-dom@19.1.0
+
+Install TypeScript
+
+npm install typescript@5.9.2 --save-dev
+
+Install Dependencies
+
+npm install
+
+Verify Installation
+
+Run:
+npx expo-doctor
+
+All checks should pass. Minor warnings about version mismatches can be ignored, but make sure React matches SDK requirements.
+
 ## Setting up the fake API (json-server)
 
 Update the file `src/services/api.ts`.
