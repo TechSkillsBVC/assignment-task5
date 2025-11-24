@@ -1,38 +1,100 @@
-# Volunteam App
+# Volunteam
 
-## Setting up the fake API (json-server)
+This project was created using **Expo**, **json-server**, and the **ImgBB API**.  
+It is part of a BVC TechSkills assignment focusing on mobile development, API usage, and writing clear code documentation.
 
-Update the file `src/services/api.ts`.
+---
 
-Before running your 'json-server', get your computer's IP address and update your baseURL to `http://your_ip_address_here:3333` and then run:
+## Project Scope & Goals
+
+- Implement a simple login and authentication flow.
+- Display volunteer events on a map using `react-native-maps`.
+- Integrate with a fake backend powered by `json-server`.
+- Practice writing clear comments for:
+  - functions (inputs/outputs),
+  - components (responsibilities/props),
+  - services (purpose/behavior).
+
+---
+
+# Tech Stack
+
+- React Native / Expo
+- TypeScript
+- React Navigation
+- json-server + json-server-auth
+- ImgBB (optional image upload service)
+
+---
+
+# Running the Expo App
+
+## 1. Add your ImgBB API key
+
+Create `.env.local`:
 
 ```
-npx json-server --watch db.json --port 3333 --host your_ip_address_here -m ./node_modules/json-server-auth
+IMGBB_API_KEY="INSERT YOUR KEY HERE"
 ```
 
-To access your server online without running json-server locally, you can set your baseURL to:
+`App.tsx` will automatically load this key.
+
+## 2. Start Expo
 
 ```
-https://my-json-server.typicode.com/<your-github-username>/<your-github-repo>
+npx expo start
 ```
 
-To use `my-json-server`, make sure your `db.json` is located at the repo root.
+Use Expo Go or an emulator to open the app.
 
-## Setting up the image upload API
+---
 
-Update the file `src/services/imageApi.ts`.
+# Running json-server (Fake API)
 
-You can use any hosting service of your preference. In this case, we will use ImgBB API: https://api.imgbb.com/.
-Sign up for free at https://imgbb.com/signup, get your API key and add it to the .env file in your root folder.
+The app relies on a local REST backend.
 
-To run the app in your local environment, you will need to set the IMGBB_API_KEY when starting the app using:
+## 1. Update baseURL in `src/services/api.ts`
+
+Replace:
+
+```ts
+baseURL: "http://INSERT_YOUR_IP_ADDRESS:3333";
+```
+
+Find your IP:
 
 ```
-IMGBB_API_KEY="insert_your_api_key_here" npx expo start
+ipconfig
 ```
 
-When creating your app build or publishing, import your secret values to EAS running:
+Use the IPv4 address starting with `192.168.*.*`.
+
+## 2. Start json-server
 
 ```
-eas secret:push
+npx json-server --host INSERT_YOUR_IP_ADDRESS --port 3333 ./db.json --routes routes.json
+```
+
+---
+
+# Code Documentation Requirements
+
+The assignment requires:
+
+- Adding function comments (inputs, outputs, purpose)
+- Adding component comments (responsibilities, props used)
+- Adding service/module comments (data flow, behavior)
+- Ensuring consistency across the project
+
+---
+
+# Project Structure
+
+```
+src/
+ ├── pages/        # Screens (Login, EventsMap, etc.)
+ ├── components/   # Shared UI Components
+ ├── services/     # API + caching logic
+ ├── context/      # Authentication provider
+ └── utils/        # Validation helpers
 ```
