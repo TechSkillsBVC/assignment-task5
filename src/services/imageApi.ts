@@ -1,3 +1,7 @@
+/**
+ * Client for the image hosting service. Event pictures are uploaded here and
+ * only the resulting URL is stored with the event.
+ */
 import axios, { AxiosResponse } from 'axios';
 import { getEnvironentVariable } from '../utils';
 
@@ -20,6 +24,14 @@ const imageApi = axios.create({
     params: { key: getEnvironentVariable('IMGBB_API_KEY') },
 });
 
+/**
+ * Uploads one image to the hosting service.
+ *
+ * @param imageBase64 - The image encoded as base64, without the
+ * `data:image/...;base64,` prefix.
+ * @returns The response, whose `data.data.url` is the public image URL.
+ * @throws An axios error if the API key is missing or the upload is rejected.
+ */
 export const uploadImage = (imageBase64: string): Promise<AxiosResponse> => {
     const data = new FormData();
     data.append('image', imageBase64);

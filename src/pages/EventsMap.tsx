@@ -10,15 +10,31 @@ import * as MapSettings from '../constants/MapSettings';
 import { AuthenticationContext } from '../context/AuthenticationContext';
 import mapMarkerImg from '../images/map-marker.png';
 
+/**
+ * Main screen once the user is signed in.
+ *
+ * Shows the volunteering events as markers on a map of Calgary, with a count
+ * in the footer, a button to add an event and a logout button.
+ *
+ * @param props - Stack screen props. `navigation` moves to the event details
+ * and create event screens, and back to login on logout.
+ * @returns The events map screen.
+ */
 export default function EventsMap(props: StackScreenProps<any>) {
     const { navigation } = props;
     const authenticationContext = useContext(AuthenticationContext);
     const mapViewRef = useRef<MapView>(null);
 
+    /** Opens the create event flow. Not wired up in this branch. */
     const handleNavigateToCreateEvent = () => {};
 
+    /** Opens the details screen for a tapped marker. Not wired up in this branch. */
     const handleNavigateToEventDetails = () => {};
 
+    /**
+     * Ends the session: clears the cached account and token, empties the
+     * authentication context and returns to the login screen.
+     */
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
             authenticationContext?.setValue(undefined);
@@ -138,6 +154,10 @@ const styles = StyleSheet.create({
     },
 });
 
+/**
+ * The slice of an event this screen needs: an id for the marker key and a
+ * position to place it at.
+ */
 interface event {
     id: string;
     position: {
@@ -146,6 +166,10 @@ interface event {
     };
 }
 
+/**
+ * Placeholder data so the map has something to draw. Replaced by the events
+ * endpoint once that is wired up.
+ */
 const events: event[] = [
     {
         id: 'e3c95682-870f-4080-a0d7-ae8e23e2534f',

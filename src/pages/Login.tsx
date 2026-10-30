@@ -15,6 +15,18 @@ import { getFromCache, setInCache } from '../services/caching';
 import { User } from '../types/User';
 import { isTokenExpired, sanitizeEmail, validateEmail } from '../utils';
 
+/**
+ * Sign in screen, and the app's entry point.
+ *
+ * Two things happen here. On mount it looks for a cached session and skips
+ * straight to the map if the token is still valid. Otherwise it collects an
+ * email and password, checks them locally, and exchanges them for an access
+ * token which is then cached for next time.
+ *
+ * @param props - Stack screen props. `navigation` is used to move on to the
+ * events map once the user is authenticated.
+ * @returns The login screen.
+ */
 export default function Login({ navigation }: StackScreenProps<any>) {
     const authenticationContext = useContext(AuthenticationContext);
     const [email, setEmail] = useState('');
@@ -44,6 +56,13 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
     }, [accessTokenIsValid]);
 
+    /**
+     * Validates the form, then signs the user in.
+     *
+     * On success the account and token are cached and the user lands on the map.
+     * On failure the server's message is put into `authError`, which the effect
+     * above turns into an alert.
+     */
     const handleAuthentication = () => {
         if (formIsValid()) {
             setIsAuthenticating(true);
@@ -53,7 +72,6 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     setInCache('accessToken', response.data.accessToken);
                     authenticationContext?.setValue(response.data.user);
                     setIsAuthenticating(false);
-                    123;
                     navigation.navigate('EventsMap');
                 })
                 .catch((error) => {
@@ -67,18 +85,36 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         }
     };
 
+    /**
+     * Runs both field checks before a request is made. Both run every time, so
+     * each field's error shows at once rather than one after the other.
+     *
+     * @returns True when the email and the password are both acceptable.
+     */
     const formIsValid = () => {
         const emailIsValid = !isEmailInvalid();
         const passwordIsValid = !isPasswordInvalid();
         return emailIsValid && passwordIsValid;
     };
 
+    /**
+     * Checks the password is long enough and updates the field's error state.
+     *
+     * @returns True when the password is shorter than 6 characters.
+     */
     const isPasswordInvalid = (): boolean => {
         const invalidCheck = password.length < 6;
         setPasswordIsInvalid(invalidCheck);
         return invalidCheck ? true : false;
     };
 
+    /**
+     * Checks the email against {@link validateEmail} and updates the field's
+     * error state. Also runs on blur, so the message appears as soon as the user
+     * leaves the field.
+     *
+     * @returns True when the address is not usable.
+     */
     const isEmailInvalid = (): boolean => {
         const invalidCheck = !validateEmail(email);
         setEmailIsInvalid(invalidCheck);
