@@ -10,6 +10,16 @@ import EventsMap from '../pages/EventsMap';
 import { AuthenticationContext, AuthenticationContextObject } from '../context/AuthenticationContext';
 import { User } from '../types/User';
 
+/**
+ * Navigation for the whole app, and the home of the authentication state.
+ *
+ * Holds the signed in user and hands it to every screen through
+ * {@link AuthenticationContext}. Screens are stacked in the order they are
+ * reached, starting at Login. Headers are hidden because each screen draws
+ * its own.
+ *
+ * @returns The navigation container wrapped in the authentication provider.
+ */
 export default function Routes() {
     const [authenticatedUser, setAuthenticatedUser] = useState<User>();
 
