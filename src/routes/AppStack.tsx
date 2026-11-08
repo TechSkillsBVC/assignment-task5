@@ -10,6 +10,8 @@ import EventsMap from '../pages/EventsMap';
 import { AuthenticationContext, AuthenticationContextObject } from '../context/AuthenticationContext';
 import { User } from '../types/User';
 
+// Sets up the app's screens (Login and EventsMap) and lets users move between them. Takes no props.
+// Also keeps track of the logged-in user and shares it with every screen.
 export default function Routes() {
     const [authenticatedUser, setAuthenticatedUser] = useState<User>();
 
