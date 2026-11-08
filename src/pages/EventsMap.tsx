@@ -10,15 +10,20 @@ import * as MapSettings from '../constants/MapSettings';
 import { AuthenticationContext } from '../context/AuthenticationContext';
 import mapMarkerImg from '../images/map-marker.png';
 
+// Main screen. Shows volunteer events as markers on a map and lets the user log out.
+// Takes the navigation prop, used to go back to the Login screen.
 export default function EventsMap(props: StackScreenProps<any>) {
     const { navigation } = props;
     const authenticationContext = useContext(AuthenticationContext);
     const mapViewRef = useRef<MapView>(null);
 
+    // Will open the screen for creating an event. Not built yet.
     const handleNavigateToCreateEvent = () => {};
 
+    // Will open the details of the tapped event. Not built yet.
     const handleNavigateToEventDetails = () => {};
 
+    // Clears the saved login from the device, then goes back to the Login screen.
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
             authenticationContext?.setValue(undefined);
@@ -138,6 +143,7 @@ const styles = StyleSheet.create({
     },
 });
 
+// An event's id and its location on the map.
 interface event {
     id: string;
     position: {
@@ -146,6 +152,7 @@ interface event {
     };
 }
 
+// Sample events shown on the map for now.
 const events: event[] = [
     {
         id: 'e3c95682-870f-4080-a0d7-ae8e23e2534f',

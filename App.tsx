@@ -12,6 +12,8 @@ import {
 import AppStack from './src/routes/AppStack';
 import { StatusBar } from 'expo-status-bar';
 
+// Main entry point of the app. Takes no props.
+// Loads the fonts, then shows the app's screens. Shows nothing until the fonts are ready.
 export default function App() {
     const [fontsLoaded] = useFonts({
         Nunito_400Regular,

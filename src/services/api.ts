@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 
+// Connection to the app's API, used to log in and get data.
 const api = axios.create({
     // Before running your 'json-server', get your computer's IP address and
     // update your baseURL to `http://your_ip_address_here:3333` and then run:
@@ -14,6 +15,8 @@ const api = axios.create({
     baseURL: 'http://0.0.0.0:3333',
 });
 
+// Takes an email and password and sends them to the API to log in.
+// Returns the API's response, which holds the user's details and access token.
 export const authenticateUser = (email: string, password: string): Promise<AxiosResponse> => {
     return api.post(`/login`, { email, password });
 };
