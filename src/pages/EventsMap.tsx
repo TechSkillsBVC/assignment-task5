@@ -10,15 +10,57 @@ import * as MapSettings from '../constants/MapSettings';
 import { AuthenticationContext } from '../context/AuthenticationContext';
 import mapMarkerImg from '../images/map-marker.png';
 
+/**
+ * EventsMap is the main screen shown after login. It displays a map with a
+ * marker for each volunteering event, and lets the user create a new event
+ * or log out.
+ *
+ * Capabilities:
+ * - Renders a map, fitted to the event markers' coordinates once the map
+ *   has finished its initial layout.
+ * - Shows a marker for each event; tapping one is meant to open that
+ *   event's details (`handleNavigateToEventDetails` is currently a stub).
+ * - Shows a footer bar with the number of events found and a button to
+ *   start creating a new event (`handleNavigateToCreateEvent` is currently
+ *   a stub).
+ * - Shows a floating button to log out, which clears the cached session and
+ *   returns to the Login screen.
+ *
+ * Inputs: navigation props (`StackScreenProps`), supplied automatically by
+ * the stack navigator this screen is registered on (see `AppStack.tsx`).
+ * Output: the rendered map screen.
+ */
 export default function EventsMap(props: StackScreenProps<any>) {
     const { navigation } = props;
     const authenticationContext = useContext(AuthenticationContext);
     const mapViewRef = useRef<MapView>(null);
 
+    /**
+     * Intended to start the "create a new event" flow when the footer's "+"
+     * button is pressed. Not implemented yet.
+     *
+     * Inputs: none. Output: none.
+     */
     const handleNavigateToCreateEvent = () => {};
 
+    /**
+     * Intended to navigate to an event's details screen when its marker is
+     * pressed. Not implemented yet.
+     *
+     * Inputs: none. Output: none.
+     */
     const handleNavigateToEventDetails = () => {};
 
+    /**
+     * Logs the current user out: clears the cached user info and access
+     * token, clears the authentication context, and navigates back to the
+     * Login screen.
+     *
+     * Inputs: none, reads the `navigation` and `authenticationContext` from
+     * the enclosing component.
+     * Output: none, a `Promise<void>` that resolves once the cache has been
+     * cleared and navigation has been triggered.
+     */
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
             authenticationContext?.setValue(undefined);
@@ -138,6 +180,11 @@ const styles = StyleSheet.create({
     },
 });
 
+/**
+ * Minimal shape of an event, as used by this screen to place markers on the
+ * map. This is a placeholder until events are fetched from the API; it only
+ * carries the fields the map currently needs (an id and a position).
+ */
 interface event {
     id: string;
     position: {
@@ -146,6 +193,10 @@ interface event {
     };
 }
 
+/**
+ * Hardcoded sample events used to place markers on the map before the
+ * screen fetches real events from the API.
+ */
 const events: event[] = [
     {
         id: 'e3c95682-870f-4080-a0d7-ae8e23e2534f',

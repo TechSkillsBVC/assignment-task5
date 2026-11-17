@@ -15,6 +15,26 @@ import { getFromCache, setInCache } from '../services/caching';
 import { User } from '../types/User';
 import { isTokenExpired, sanitizeEmail, validateEmail } from '../utils';
 
+/**
+ * Login is the app's first screen. It collects an email and password,
+ * validates them, authenticates against the fake API, and, on success,
+ * caches the session and navigates to the EventsMap screen. It also
+ * auto-logs the user back in with a cached, still-valid session.
+ *
+ * Capabilities:
+ * - Validates the email and password fields as the user leaves them, and
+ *   shows an inline error message for whichever field is invalid.
+ * - Submits the credentials to the API, shows a loading spinner while
+ *   waiting, and surfaces an alert if authentication fails.
+ * - On successful login, caches the user and access token, and navigates to
+ *   EventsMap.
+ * - On mount, checks for a cached user and a still-valid cached access
+ *   token, and automatically navigates to EventsMap when both are present.
+ *
+ * Inputs: navigation props (`StackScreenProps`), supplied automatically by
+ * the stack navigator this screen is registered on (see `AppStack.tsx`).
+ * Output: the rendered login form.
+ */
 export default function Login({ navigation }: StackScreenProps<any>) {
     const authenticationContext = useContext(AuthenticationContext);
     const [email, setEmail] = useState('');
@@ -27,6 +47,8 @@ export default function Login({ navigation }: StackScreenProps<any>) {
     const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
     const isFocused = useIsFocused();
 
+    // On mount: restore a cached user/token, and show an alert for any
+    // authentication error that was set by handleAuthentication below.
     useEffect(() => {
         getFromCache('userInfo').then(
             (cachedUserInfo) => authenticationContext?.setValue(cachedUserInfo as User),
@@ -40,10 +62,22 @@ export default function Login({ navigation }: StackScreenProps<any>) {
             Alert.alert('Authentication Error', authError, [{ text: 'Ok', onPress: () => setAuthError(undefined) }]);
     }, [authError]);
 
+    // Once a cached, still-valid access token and a cached user are both
+    // available, skip the login form and go straight to EventsMap.
     useEffect(() => {
         if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
     }, [accessTokenIsValid]);
 
+    /**
+     * Submits the current email and password to the API, when they pass
+     * validation (see `formIsValid`). On success, caches the user and
+     * access token and navigates to EventsMap. On failure, sets `authError`
+     * so the effect above shows an alert.
+     *
+     * Inputs: none, reads `email` and `password` from this component's
+     * state.
+     * Output: none.
+     */
     const handleAuthentication = () => {
         if (formIsValid()) {
             setIsAuthenticating(true);
@@ -67,18 +101,44 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         }
     };
 
+    /**
+     * Checks whether both the email and password fields are currently
+     * valid, updating their individual invalid-state flags as a side
+     * effect (see `isEmailInvalid` and `isPasswordInvalid`).
+     *
+     * Inputs: none, reads `email` and `password` from this component's
+     * state.
+     * Output: `true` when both fields are valid, `false` otherwise.
+     */
     const formIsValid = () => {
         const emailIsValid = !isEmailInvalid();
         const passwordIsValid = !isPasswordInvalid();
         return emailIsValid && passwordIsValid;
     };
 
+    /**
+     * Checks whether the current password is too short, and updates
+     * `passwordIsInvalid` so the inline error message and red border can be
+     * shown or hidden.
+     *
+     * Inputs: none, reads `password` from this component's state.
+     * Output: `true` when the password is shorter than 6 characters,
+     * `false` otherwise.
+     */
     const isPasswordInvalid = (): boolean => {
         const invalidCheck = password.length < 6;
         setPasswordIsInvalid(invalidCheck);
         return invalidCheck ? true : false;
     };
 
+    /**
+     * Checks whether the current email is not a valid address, and updates
+     * `emailIsInvalid` so the inline error message and red border can be
+     * shown or hidden.
+     *
+     * Inputs: none, reads `email` from this component's state.
+     * Output: `true` when the email fails validation, `false` otherwise.
+     */
     const isEmailInvalid = (): boolean => {
         const invalidCheck = !validateEmail(email);
         setEmailIsInvalid(invalidCheck);
