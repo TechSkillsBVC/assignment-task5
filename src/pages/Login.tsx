@@ -15,6 +15,8 @@ import { getFromCache, setInCache } from '../services/caching';
 import { User } from '../types/User';
 import { isTokenExpired, sanitizeEmail, validateEmail } from '../utils';
 
+// Renders the user login screen, validates credentials, handles API authentication, 
+// and redirects to EventsMap.
 export default function Login({ navigation }: StackScreenProps<any>) {
     const authenticationContext = useContext(AuthenticationContext);
     const [email, setEmail] = useState('');
@@ -27,6 +29,8 @@ export default function Login({ navigation }: StackScreenProps<any>) {
     const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
     const isFocused = useIsFocused();
 
+    // Checks AsyncStorage for a cached user session/valid token on load and displays 
+    // an alert if an auth error occurs.
     useEffect(() => {
         getFromCache('userInfo').then(
             (cachedUserInfo) => authenticationContext?.setValue(cachedUserInfo as User),
@@ -40,10 +44,13 @@ export default function Login({ navigation }: StackScreenProps<any>) {
             Alert.alert('Authentication Error', authError, [{ text: 'Ok', onPress: () => setAuthError(undefined) }]);
     }, [authError]);
 
+    // Automatically navigates to the EventsMap screen once a valid cached token and 
+    // user profile are confirmed.
     useEffect(() => {
         if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
     }, [accessTokenIsValid]);
-
+// Validates the form inputs, sends login credentials to the API, caches the session, 
+// and navigates to EventsMap.
     const handleAuthentication = () => {
         if (formIsValid()) {
             setIsAuthenticating(true);
@@ -66,19 +73,22 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                 });
         }
     };
-
+// Checks both email and password validation rules and returns true only if both inputs 
+// are valid.
     const formIsValid = () => {
         const emailIsValid = !isEmailInvalid();
         const passwordIsValid = !isPasswordInvalid();
         return emailIsValid && passwordIsValid;
     };
-
+// Verifies that the password is at least 6 characters long, updates error state, 
+// and returns true if invalid.
     const isPasswordInvalid = (): boolean => {
         const invalidCheck = password.length < 6;
         setPasswordIsInvalid(invalidCheck);
         return invalidCheck ? true : false;
     };
-
+// Checks if the email input matches a valid email format, updates error state, 
+// and returns true if invalid.
     const isEmailInvalid = (): boolean => {
         const invalidCheck = !validateEmail(email);
         setEmailIsInvalid(invalidCheck);
@@ -144,7 +154,8 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         </LinearGradient>
     );
 }
-
+// Styles for the login screen gradient background, text inputs, validation errors, 
+// and loading spinner.
 const styles = StyleSheet.create({
     gradientContainer: {
         flex: 1,
