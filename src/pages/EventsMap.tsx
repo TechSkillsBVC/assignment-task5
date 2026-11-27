@@ -10,6 +10,8 @@ import * as MapSettings from '../constants/MapSettings';
 import { AuthenticationContext } from '../context/AuthenticationContext';
 import mapMarkerImg from '../images/map-marker.png';
 
+// Displays an interactive Map showing volunteer event markers, a bottom event counter 
+// bar, and a logout button.
 export default function EventsMap(props: StackScreenProps<any>) {
     const { navigation } = props;
     const authenticationContext = useContext(AuthenticationContext);
@@ -19,6 +21,8 @@ export default function EventsMap(props: StackScreenProps<any>) {
 
     const handleNavigateToEventDetails = () => {};
 
+    // Clears stored user session data from AsyncStorage, resets auth context, 
+    // and redirects back to the Login screen.
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
             authenticationContext?.setValue(undefined);
@@ -85,6 +89,7 @@ export default function EventsMap(props: StackScreenProps<any>) {
     );
 }
 
+// Styles for the map container, floating footer bar, and action buttons.
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
@@ -138,6 +143,7 @@ const styles = StyleSheet.create({
     },
 });
 
+// Defines the structure of an event item with a unique ID and map coordinates.
 interface event {
     id: string;
     position: {
@@ -145,7 +151,7 @@ interface event {
         longitude: number;
     };
 }
-
+// Hardcoded sample list of volunteer event locations plotted on the map.
 const events: event[] = [
     {
         id: 'e3c95682-870f-4080-a0d7-ae8e23e2534f',
